@@ -27,7 +27,10 @@ public:
 	class UProgressBar* ProgressPowerBar;
 
 	void SetOwnerTennisCharacter(ATennisCharacter* InTennisCharacter);
-
+	
+	UFUNCTION(BlueprintCallable)
+	float GetProgressPowerBar();
+	
 	UFUNCTION(BlueprintCallable)
 	void SetProgressPowerBar(float powerBarPercent);
 };

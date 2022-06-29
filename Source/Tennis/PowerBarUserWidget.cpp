@@ -27,6 +27,11 @@ void UPowerBarUserWidget::SetOwnerTennisCharacter(ATennisCharacter* InTennisChar
 	TennisCharacterOwner = InTennisCharacter;
 }
 
+float UPowerBarUserWidget::GetProgressPowerBar()
+{
+	return ProgressPowerBar->Percent;
+}
+
 void UPowerBarUserWidget::SetProgressPowerBar(float powerBarPercent)
 {
 	ProgressPowerBar->SetPercent(powerBarPercent);

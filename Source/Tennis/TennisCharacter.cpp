@@ -206,8 +206,7 @@ void ATennisCharacter::HitBall(float strength, float CheckUpBoost, float ZUpBoos
 	// Force by distance
 	FVector AimLocation = Aim->GetActorLocation();
 	// how strong is shot
-	FTimespan currentTime = FDateTime::Now() - finishedShooting;
-	float power = ((1200.f - abs(currentTime.GetTotalMilliseconds())) / 1200.f);
+	float power = PowerBar->GetProgressPowerBar();
 	if (power < 0) {
 		power = 0.01;
 	}
@@ -225,7 +224,7 @@ void ATennisCharacter::HitBall(float strength, float CheckUpBoost, float ZUpBoos
 	// Up force
 	FVector upVector = FVector(0.f, 0.f, ZUpBoost) + upBoost;
 	// how far from net player is
-	if ((abs(GetActorLocation().X) < 400.f || TennisBallLocation.Z > 340.f) && !isServing)
+	if (((abs(GetActorLocation().X) < 400.f && TennisBallLocation.Z > 250.f) || TennisBallLocation.Z > 340.f) && !isServing)
 	{
 		upVector += FVector(0.f, 0.f, -(TennisBallLocation.Z - netHight) * 2);
 		strength += 250.f;
@@ -301,7 +300,7 @@ void ATennisCharacter::HitBall(float strength, float CheckUpBoost, float ZUpBoos
 			PowerBar->SetProgressPowerBar(0.f);
 			canShoot = true;
 			isBallScanned = false;
-		}, 1.f, false);
+		}, 0.5f, false);
 		
 	}
 	
@@ -487,7 +486,7 @@ void ATennisCharacter::Tick(float DeltaSeconds)
 
 		// hit ball if it is close to character
 		FVector TennisBallLocation = TennisBall->GetActorLocation();
-		if ((GetActorLocation() - TennisBallLocation).Size() < 350.f && !isServing && canShoot && (isShootingTopSpin || isShootingSlice || isShootingLob))
+		if ((GetActorLocation() - TennisBallLocation).Size() < 350.f && !isServing && canShoot && IsShooting && (isShootingTopSpin || isShootingSlice || isShootingLob))
 		{
 			// scan ball
 			if (!isBallScanned)
@@ -496,7 +495,7 @@ void ATennisCharacter::Tick(float DeltaSeconds)
 				FVector ballVelocity = TennisBall->TennisBallMesh->GetComponentVelocity();
 				FVector scan1 = TennisBallLocation + ballVelocity * 0.5f;
 				FVector scan2 = TennisBallLocation + ballVelocity * 0.2f;
-				if ((GetActorLocation() - scan1).Size() < (GetActorLocation() - scan2).Size()+40.f)
+				if ((GetActorLocation() - scan1).Size() < (GetActorLocation() - scan2).Size()+20.f)
 				{
 					ballLocation = scan1;
 				}
@@ -523,11 +522,11 @@ void ATennisCharacter::Tick(float DeltaSeconds)
 			// auto move
 			if ((ballLocation - TennisCharacterLocation).Size() > 30)
 			{
-				AddMovementInput(direction, 10.f);
+				AddMovementInput(direction, 15.f);
 			}
 			
 		}
-		if ((GetActorLocation() - TennisBallLocation).Size() < 140.f && canShoot)
+		if ((GetActorLocation() - TennisBallLocation).Size() < 140.f && canShoot && IsShooting && !isServing)
 		{
 			if (isShootingTopSpin)
 			{
@@ -543,6 +542,30 @@ void ATennisCharacter::Tick(float DeltaSeconds)
 			}
 			
 			
+		}
+		// serve 
+		if (isServing && canShoot && IsShooting)
+		{
+			FTimerHandle TimerHandle;
+			GetWorld()->GetTimerManager().SetTimer(TimerHandle, [&]()
+				// serve after 1 sec
+				{
+					if (isShootingTopSpin)
+					{
+						TopSpin();
+					}
+					if (isShootingSlice)
+					{
+						Slice();
+					}
+					if (isShootingLob)
+					{
+						Lob();
+					}
+				}, 1.f, false);
+			
+
+
 		}
 		
 		// change animation if needed
